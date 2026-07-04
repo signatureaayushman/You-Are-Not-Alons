@@ -1,0 +1,6 @@
+{
+  "name": "Companion",
+  "description": "An empathetic, emotionally intelligent AI companion app.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
