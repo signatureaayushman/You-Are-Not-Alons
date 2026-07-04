@@ -1,0 +1,60 @@
+name: Auto-Extract Uploaded Zip
+
+on:
+  push:
+    paths:
+      - '**.zip'
+  workflow_dispatch: # Allows you to run the action manually from the "Actions" tab
+
+jobs:
+  unzip-files:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Allows the Action to commit and push files back to your repo
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Unzip Utility
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Find and extract all .zip files
+        run: |
+          find . -name "*.zip" | while read -r zipfile; do
+            echo "Processing: $zipfile"
+            dir=$(dirname "$zipfile")
+            # Extract zip contents to its folder
+            unzip -o "$zipfile" -d "$dir"
+            # Delete the zip file so it doesn't clutter the repo
+            rm "$zipfile"
+          done
+
+      - name: Protect workflows from being modified
+        run: |
+          # The default GITHUB_TOKEN is not allowed to create or update workflow files (like .github/workflows/android.yml)
+          # We discard any changes inside .github/workflows/ to prevent the git push from being blocked.
+          if [ -d ".github/workflows" ]; then
+            echo "Restoring original .github/workflows to prevent security block..."
+            git checkout HEAD -- .github/workflows/ || true
+            
+            # If the folder was new and didn't exist in HEAD, we clean it up
+            git clean -fd .github/workflows/ || true
+          fi
+
+      - name: Commit and Push Extracted Files
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add -A
+          
+          # Check if there are changes to commit
+          if git diff-index --quiet HEAD --; then
+            echo "No changes to commit."
+          else
+            git commit -m "chore: auto-extracted uploaded .zip file(s)"
+            git push
+          fi
