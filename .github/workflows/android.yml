@@ -16,9 +16,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Download Clean Gradle Wrapper JAR
+            - name: Download Clean Gradle Wrapper JAR
         run: |
-          curl -sLo gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v9.3.1/gradle/wrapper/gradle-wrapper.jar
+          mkdir -p gradle/wrapper
+          curl -fsSLo gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v9.3.1/gradle/wrapper/gradle-wrapper.jar
 
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v4
