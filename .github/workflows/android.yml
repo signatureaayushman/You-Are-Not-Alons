@@ -16,10 +16,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-            - name: Download Clean Gradle Wrapper JAR
+      - name: Download Clean Gradle Wrapper JAR
         run: |
           mkdir -p gradle/wrapper
           curl -fsSLo gradle/wrapper/gradle-wrapper.jar https://raw.githubusercontent.com/gradle/gradle/v9.3.1/gradle/wrapper/gradle-wrapper.jar
+
+      - name: Ensure Gradle Wrapper Properties
+        run: |
+          if [ ! -f gradle/wrapper/gradle-wrapper.properties ]; then
+            echo "gradle-wrapper.properties not found. Creating it..."
+            cat > gradle/wrapper/gradle-wrapper.properties <<'EOF'
+          distributionBase=GRADLE_USER_HOME
+          distributionPath=wrapper/dists
+          distributionUrl=https\://services.gradle.org/distributions/gradle-9.3.1-bin.zip
+          networkTimeout=10000
+          validateDistributionUrl=true
+          zipStoreBase=GRADLE_USER_HOME
+          zipStorePath=wrapper/dists
+          EOF
+          fi
 
       - name: Validate Gradle Wrapper
         uses: gradle/actions/wrapper-validation@v4
@@ -61,7 +76,7 @@ jobs:
             echo "Decoding debug.keystore.base64..."
             base64 -d debug.keystore.base64 > debug.keystore || base64 --decode debug.keystore.base64 > debug.keystore
           fi
-          
+
           if [ ! -f debug.keystore ]; then
             echo "debug.keystore not found. Generating a fresh one..."
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
